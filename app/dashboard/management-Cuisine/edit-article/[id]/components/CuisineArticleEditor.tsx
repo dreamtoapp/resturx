@@ -115,7 +115,7 @@ export default function CuisineArticleEditor({ cuisine }: CuisineArticleEditorPr
           </p>
         </div>
         {cuisine.publishedAt && (
-          <Badge variant="success" className="bg-green-500 text-white">
+          <Badge className="bg-green-500 text-white hover:bg-green-600">
             <Icon name="Check" className="h-3 w-3 ml-1" />
             منشورة
           </Badge>
@@ -176,7 +176,10 @@ export default function CuisineArticleEditor({ cuisine }: CuisineArticleEditorPr
         <CardHeader>
           <CardTitle className="text-lg flex items-center justify-between">
             الوصف التعريفي (Meta Description)
-            <Badge variant={metaDescLength >= 150 && metaDescLength <= 160 ? 'success' : 'secondary'}>
+            <Badge
+              className={metaDescLength >= 150 && metaDescLength <= 160 ? 'bg-green-500 text-white' : ''}
+              variant={metaDescLength >= 150 && metaDescLength <= 160 ? 'default' : 'secondary'}
+            >
               {metaDescLength}/160
             </Badge>
           </CardTitle>

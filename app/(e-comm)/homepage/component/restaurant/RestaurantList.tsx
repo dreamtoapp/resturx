@@ -108,22 +108,22 @@ function RestaurantCard({ restaurant, index }: { restaurant: any; index: number 
   );
 }
 
-// Empty State Component
-function EmptyState() {
-  return (
-    <div className="py-12 px-6 text-center">
-      <div className="mx-auto w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
-        <Icon name="Store" className="w-12 h-12 text-primary/60" />
-      </div>
-      <h3 className="text-lg font-semibold text-foreground mb-3">
-        لا توجد مطاعم متاحة حالياً
-      </h3>
-      <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-        نحن نعمل على إضافة مطاعم متنوعة. ستعود قريباً مع تشكيلة واسعة من المطاعم المميزة.
-      </p>
-    </div>
-  );
-}
+// Empty State Component (currently unused - kept for future use)
+// function EmptyState() {
+//   return (
+//     <div className="py-12 px-6 text-center">
+//       <div className="mx-auto w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
+//         <Icon name="Store" className="w-12 h-12 text-primary/60" />
+//       </div>
+//       <h3 className="text-lg font-semibold text-foreground mb-3">
+//         لا توجد مطاعم متاحة حالياً
+//       </h3>
+//       <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+//         نحن نعمل على إضافة مطاعم متنوعة. ستعود قريباً مع تشكيلة واسعة من المطاعم المميزة.
+//       </p>
+//     </div>
+//   );
+// }
 
 // Main Restaurant List Component
 export default async function RestaurantList() {

@@ -106,7 +106,7 @@ enum ErrorStatus {
 model Country {
   id          String  @id @default(auto()) @map("_id") @db.ObjectId
   name        String  @default("") // "مطبخ هندي", "مطبخ عربي", "مطبخ إيطالي"
-  slug        String  @default("") // "indian", "arabic", "italian"
+  slug        String  @unique @default("") // "indian", "arabic", "italian"
   logo        String? // Cuisine icon/flag image
   description String? // Short description about cuisine
 

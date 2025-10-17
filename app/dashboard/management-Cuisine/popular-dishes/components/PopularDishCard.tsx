@@ -2,8 +2,6 @@
 
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/icons/Icon';
 import AddImage from '@/components/AddImage';
 
 import DeletePopularDishAlert from './DeletePopularDishAlert';
