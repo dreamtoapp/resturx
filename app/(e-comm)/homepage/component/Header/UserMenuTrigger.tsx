@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { UserRole } from '@/constant/enums';
 import { useState } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/app/(e-comm)/(cart-flow)/cart/cart-controller/cartStore';
+import { clearCart as clearDatabaseCart } from '@/app/(e-comm)/(cart-flow)/cart/actions/cartServerActions';
 import { Icon } from '@/components/icons/Icon';
 // Removed connection status indicator to avoid user confusion
 // Removed PushNotificationSetup - web push notifications disabled
@@ -38,7 +40,9 @@ export default function UserMenuTrigger({ user, alerts }: UserMenuTriggerProps) 
     const [userStats, setUserStats] = useState<UserStats | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
+    const router = useRouter();
     const name = user?.name;
     const image = user?.image;
 
@@ -88,18 +92,29 @@ export default function UserMenuTrigger({ user, alerts }: UserMenuTriggerProps) 
     const handleLogout = async () => {
         setIsLoggingOut(true);
         try {
-            // Clear cart on logout
+            // Clear database cart first
+            await clearDatabaseCart();
+            console.log('🗄️ Database cart cleared on logout');
+
+            // Clear client-side cart
             const { clearCart } = useCartStore.getState();
             clearCart();
-            console.log('🛒 Cart cleared on logout');
+            console.log('🛒 Client cart cleared on logout');
 
+            // Sign out and redirect
             await signOut({
                 callbackUrl: '/',
-                redirect: true
+                redirect: false // Don't auto-redirect, we'll handle it manually
             });
+
+            // Manually redirect and refresh to update server components
+            router.push('/');
+            router.refresh();
+            // Dialog will close automatically when page redirects
         } catch (error) {
             console.error('خطأ في تسجيل الخروج:', error);
             setIsLoggingOut(false);
+            setShowLogoutDialog(false); // Close dialog on error
         }
     };
 
@@ -252,7 +267,7 @@ export default function UserMenuTrigger({ user, alerts }: UserMenuTriggerProps) 
 
                 {/* Compact Logout */}
                 <div className="p-1">
-                    <AlertDialog>
+                    <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
                         <AlertDialogTrigger asChild>
                             <DropdownMenuItem
                                 className="flex items-center gap-2.5 px-2 py-2 mx-1 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer group"
@@ -279,11 +294,11 @@ export default function UserMenuTrigger({ user, alerts }: UserMenuTriggerProps) 
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter className="gap-2">
-                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                <AlertDialogAction
+                                <AlertDialogCancel disabled={isLoggingOut}>إلغاء</AlertDialogCancel>
+                                <Button
                                     onClick={handleLogout}
                                     disabled={isLoggingOut}
-                                    className="bg-destructive hover:bg-destructive/90"
+                                    className="bg-destructive hover:bg-destructive/90 text-white"
                                 >
                                     {isLoggingOut ? (
                                         <>
@@ -296,7 +311,7 @@ export default function UserMenuTrigger({ user, alerts }: UserMenuTriggerProps) 
                                             تسجيل الخروج
                                         </>
                                     )}
-                                </AlertDialogAction>
+                                </Button>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>

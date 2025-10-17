@@ -527,28 +527,32 @@ export default function LoginPe({ redirect = '/' }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
   // Debug form state changes
-  console.log('🔍 DEBUG: Login form state changed:', { state, isPending });
+  console.log('🔍 DEBUG: Login form state changed:', { state, isPending, isRedirecting });
 
   // ✅ SILENT CART SYNC - NO NOTIFICATIONS
   useEffect(() => {
-    if (state?.success) {
+    if (state?.success && !isRedirecting) {
+      setIsRedirecting(true);
       // Silent cart sync - no loading toast, no success message
       syncCartOnLogin()
         .then(() => {
-          // Redirect immediately - no waiting, no notifications
+          // Redirect and refresh to update server session
           router.push(redirect);
+          router.refresh(); // Refresh server components to get new session
         })
         .catch((error) => {
           // Only show error if sync actually fails
           console.error('Cart sync error:', error);
           // Still redirect - don't block user experience
           router.push(redirect);
+          router.refresh(); // Refresh server components to get new session
         });
     }
-  }, [state, redirect, router]);
+  }, [state, redirect, router, isRedirecting]);
 
   const handleForgotPassword = () => {
     setShowForgotPassword(true);
@@ -568,7 +572,7 @@ export default function LoginPe({ redirect = '/' }: LoginFormProps) {
         <div className="space-y-8">
           <LoginHeader />
 
-          <form action={addAction} className="space-y-6" onSubmit={() => console.log('🚀 DEBUG: Form submitted - starting login process')}>
+          <form action={addAction} className="space-y-6">
             {/* Hidden input for redirect */}
             <input type="hidden" name="redirect" value={redirect} />
 
@@ -580,7 +584,7 @@ export default function LoginPe({ redirect = '/' }: LoginFormProps) {
             />
 
             <FormActions
-              isPending={isPending}
+              isPending={isPending || isRedirecting}
               state={state}
             />
           </form>

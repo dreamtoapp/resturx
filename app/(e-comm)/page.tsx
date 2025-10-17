@@ -101,7 +101,7 @@ export default async function HomePage(props: { searchParams: Promise<{ slug?: s
       <div className='container mx-auto flex flex-col gap-8 bg-background text-foreground px-4 sm:px-6 lg:px-8'>
         {/* Brief intro for SEO/context without altering layout significantly */}
         <p className="text-sm text-muted-foreground mt-4">
-          تسوق أحدث العروض والتصنيفات المختارة بعناية للحصول على أفضل المنتجات بأسعار تنافسية.
+          اكتشف أشهى الأطباق من أفضل المطاعم المختارة بعناية واستمتع بتجربة طعام مميزة بأسعار تنافسية.
         </p>
         <section className="space-y-6" aria-label="Featured promotions">
           <FeaturedPromotions />
