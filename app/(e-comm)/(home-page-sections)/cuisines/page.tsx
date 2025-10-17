@@ -1,20 +1,26 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from '@/components/link';
-
-
+import { Icon } from '@/components/icons/Icon';
 import { getCategories } from '../../homepage/actions/getCategories';
 
 export const metadata: Metadata = {
-    title: 'جميع الفئات | متجر الأزياء',
-    description: 'تصفح جميع فئات المنتجات في متجرنا'
+    title: 'جميع المطابخ | دليل المطاعم',
+    description: 'تصفح جميع أنواع المطابخ واكتشف أفضل المطاعم من مختلف أنحاء العالم'
 };
 
 export default async function CategoriesPage() {
     const categories = await getCategories();
 
     return (
-        <div className="container mx-auto py-12">
+        <div className="container mx-auto py-12 px-4">
+            {/* Breadcrumbs */}
+            <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8" aria-label="Breadcrumb">
+                <Link href="/" className="hover:text-foreground">الرئيسية</Link>
+                <Icon name="ChevronRight" className="h-4 w-4" />
+                <span className="text-foreground">المطابخ</span>
+            </nav>
+
             <div className="mb-12 text-center">
                 <h1 className="mb-3 text-3xl font-bold md:text-4xl lg:text-5xl">
                     تصفح حسب نوع المطبخ
@@ -28,7 +34,7 @@ export default async function CategoriesPage() {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-12">
                 {categories.length > 0 && (
                     <Link
-                        href={`/categories/${categories[0].slug}`}
+                        href={`/cuisines/${categories[0].slug}`}
                         className="group relative col-span-1 h-80 overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-lg sm:col-span-2 lg:col-span-8 lg:h-[500px]"
                     >
                         {/* Featured category background */}
@@ -78,7 +84,7 @@ export default async function CategoriesPage() {
                 <div className="col-span-1 grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-2">
                     {categories.slice(1, 5).map((category: any) => (
                         <Link
-                            href={`/categories/${category.slug}`}
+                            href={`/cuisines/${category.slug}`}
                             key={category.id}
                             className="group flex aspect-square flex-col overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:shadow-md"
                         >
@@ -116,7 +122,7 @@ export default async function CategoriesPage() {
                     <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                         {categories.slice(5).map((category: any) => (
                             <Link
-                                href={`/categories/${category.slug}`}
+                                href={`/cuisines/${category.slug}`}
                                 key={category.id}
                                 className="group flex flex-col overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:shadow-md"
                             >

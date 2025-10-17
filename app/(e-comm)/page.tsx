@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 import BackToTopButton from '@/components/BackToTopButton';
 import { getCachedProductsPage } from './homepage/actions/fetchProductsPage';
-import CategoryList from './homepage/component/category/CategoryList';
+import CuisineList from './homepage/component/cuisine/CuisineList';
 import RestaurantList from './homepage/component/restaurant/RestaurantList';
 import FeaturedPromotions from './homepage/component/offer/FeaturedPromotions';
 import { SWRConfig } from 'swr';
@@ -51,7 +51,7 @@ export default async function HomePage(props: { searchParams: Promise<{ slug?: s
     currentPage: number;
   };
 
-  // (Counter rendered inside CategoryList header)
+  // (Counter rendered inside CuisineList header)
   const firstPageKey = `/api/products-grid?page=1&slug=${encodeURIComponent(slug)}&pageSize=${PAGE_SIZE}`;
 
   // Build ItemList JSON-LD for first page products
@@ -93,7 +93,7 @@ export default async function HomePage(props: { searchParams: Promise<{ slug?: s
             subheader: undefined,
             imageUrl: s.url,
             ctaText: 'تسوق الآن',
-            ctaLink: '/categories',
+            ctaLink: '/cuisines',
             isActive: true,
           }))}
         />
@@ -106,8 +106,8 @@ export default async function HomePage(props: { searchParams: Promise<{ slug?: s
         <section className="space-y-6" aria-label="Featured promotions">
           <FeaturedPromotions />
         </section>
-        <section className="space-y-6" aria-label="Product categories">
-          <CategoryList />
+        <section className="space-y-6" aria-label="Cuisine categories">
+          <CuisineList />
         </section>
         <section className="space-y-6" aria-label="Featured restaurants">
           <RestaurantList />

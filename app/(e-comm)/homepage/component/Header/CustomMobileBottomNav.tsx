@@ -24,7 +24,7 @@ export default function CustomMobileBottomNav({ whatsappNumber }: CustomMobileBo
                 <span className="sr-only">Best Sellers</span>
             </Link>
             <Link
-                href="/categories"
+                href="/cuisines"
                 className="flex flex-col items-center justify-center text-xs group"
                 aria-label="Categories"
             >

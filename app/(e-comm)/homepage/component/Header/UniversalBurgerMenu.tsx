@@ -23,7 +23,7 @@ const universalNavItems: UniversalNavItem[] = [
         description: "العودة للصفحة الرئيسية"
     },
     {
-        href: "/categories",
+        href: "/cuisines",
         label: "التصنيفات",
         icon: "Grid3x3",
         description: "تصفح جميع الفئات"

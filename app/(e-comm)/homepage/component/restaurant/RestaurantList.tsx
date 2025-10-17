@@ -20,7 +20,7 @@ function RestaurantHeader({ restaurantCount }: { restaurantCount: number }) {
         <p className="hidden md:block text-sm text-muted-foreground">اكتشف أفضل المطاعم واستمتع بأشهى الأطباق</p>
       </div>
       {restaurantCount > 0 && (
-        <Link href="/categories" className="flex items-center text-sm font-medium text-primary hover:underline">
+        <Link href="/cuisines" className="flex items-center text-sm font-medium text-primary hover:underline">
           عرض الكل
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
             <path d="M19 12H5"></path>

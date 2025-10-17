@@ -20,7 +20,7 @@ export default function EmptyCart() {
               <Link href="/">تصفح المنتجات</Link>
             </Button>
             <Button asChild variant="outline" className="flex-1 border-feature-commerce text-feature-commerce hover:bg-feature-commerce-soft">
-              <Link href="/categories">تصفح الفئات</Link>
+              <Link href="/cuisines">تصفح المطابخ</Link>
             </Button>
           </div>
         </div>

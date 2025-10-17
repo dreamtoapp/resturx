@@ -26,7 +26,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
         subheader: 'منتجات عالية الجودة بأفضل الأسعار',
         imageUrl: '/fallback/fallback.avif',
         ctaText: 'تسوق الآن',
-        ctaLink: '/categories',
+        ctaLink: '/cuisines',
         discountPercentage: 50,
         isActive: true,
     },

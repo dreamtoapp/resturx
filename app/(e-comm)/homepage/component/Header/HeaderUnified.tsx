@@ -12,6 +12,7 @@ import { CarFront, Focus } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import NotificationBellClient from '@/components/NotificationBellClient';
 import WhatsappMetaButton from './WhatsappMetaButton';
+import ThemeToggle from './ThemeToggle';
 
 
 interface User {
@@ -74,6 +75,7 @@ function DesktopHeader({ logo, logoAlt, isLoggedIn, user, notificationBell, wish
                     )}
 
                     <SearchBar />
+                    <ThemeToggle />
                     {wishlistIcon}
                     <CartIconClient />
 
@@ -131,6 +133,7 @@ function MobileHeader({ logo, logoAlt, isLoggedIn, user, notificationBell, unrea
                         </Link>
                     )}
                     <SearchBar />
+                    <ThemeToggle />
                     {/* Use reactive notification bell for logged-in users */}
                     {isLoggedIn ? (
                         <NotificationBellClient

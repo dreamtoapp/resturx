@@ -36,7 +36,16 @@ export default async function CountryRestaurantsPage({ params }: PageProps<{ slu
   const { country, restaurants } = result;
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto py-8 px-4 space-y-8">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
+        <Link href="/" className="hover:text-foreground">الرئيسية</Link>
+        <Icon name="ChevronRight" className="h-4 w-4" />
+        <Link href="/cuisines" className="hover:text-foreground">المطابخ</Link>
+        <Icon name="ChevronRight" className="h-4 w-4" />
+        <span className="text-foreground">{country.name}</span>
+      </nav>
+
       {/* Country Header */}
       <div className="flex items-center gap-4">
         {country.logo && (
