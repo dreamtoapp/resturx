@@ -1,139 +1,124 @@
-## components/ directory overview
+# Components Directory
 
-### components/AddImage.tsx
-- **Exports**: `AddImage` (default)
-- **Purpose**: Client component to upload an image to `/api/images` with progress and preview; supports Cloudinary via server API
-- **Runtime**: Client
-- **Depends on**: `next/image`, `/api/images`
-- **Used by**: Dashboard forms/components for image uploads (various)
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+This directory contains reusable UI components and shared functionality used throughout the application.
 
-### components/app-dialog.tsx
-- **Exports**: `AppDialog` (default)
-- **Purpose**: Simplified dialog wrapper with header/footer slots
-- **Runtime**: Client
-- **Depends on**: `@/components/ui/dialog`, `@/components/ui/badge`
-- **Used by**: General UI dialogs
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+## StickyBreadcrumb Component
 
-### components/BackToTopButton.tsx
-- **Exports**: `BackToTopButton` (default)
-- **Purpose**: Floating scroll-to-top button
-- **Runtime**: Client
-- **Depends on**: DOM APIs
-- **Used by**: Any page wanting quick scroll UX
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+A globally reusable breadcrumb navigation component that sticks below the fixed header during scroll.
 
-### components/DynamicForm.tsx
-- **Exports**: `DynamicForm` (default)
-- **Purpose**: Render form inputs dynamically from a fields config
-- **Runtime**: Client
-- **Depends on**: `@/components/ui/{input,textarea,select,label}`
-- **Used by**: Forms that need dynamic fields
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+### Features
+- ✅ Fixed positioning below header (always visible during scroll)
+- ✅ Matches header styling exactly (98% bg opacity, medium blur, subtle shadow)
+- ✅ Glass-morphism effect for modern, cohesive design
+- ✅ Responsive (adapts to mobile/desktop header heights)
+- ✅ RTL-friendly for Arabic content
+- ✅ Accessible with proper ARIA labels
+- ✅ Optional icon support per breadcrumb item
 
-### components/FilterAlert.tsx
-- **Exports**: `FilterAlert` (default)
-- **Purpose**: Sticky filter summary bar with clear action
-- **Runtime**: Client
-- **Depends on**: `next/navigation`, `@/components/ui/button`
-- **Used by**: Product listing/search pages
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+### Usage
 
-### components/form-error.tsx
-- **Exports**: `FormError` (default)
-- **Purpose**: Inline form error banner
-- **Runtime**: Client/Server
-- **Depends on**: none
-- **Used by**: Forms
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+```tsx
+import StickyBreadcrumb from '@/components/StickyBreadcrumb';
 
-### components/GoogleMapsLink.tsx
-- **Exports**: `GoogleMapsLink` (default)
-- **Purpose**: Open coordinates in Google Maps in new tab
-- **Runtime**: Client
-- **Depends on**: `@/components/ui/button`
-- **Used by**: Address/location views
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+export default function YourPage() {
+  return (
+    <>
+      <StickyBreadcrumb
+        items={[
+          { label: 'الرئيسية', href: '/' },
+          { label: 'المطابخ', href: '/cuisines' },
+          { label: 'مطبخ إيطالي' } // Last item (no href = current page)
+        ]}
+      />
+      
+      <div className="container mx-auto">
+        {/* Your page content */}
+      </div>
+    </>
+  );
+}
+```
 
-### components/icons/Icon.tsx
-- **Exports**: `Icon`, `IconSize`, `IconVariant`
-- **Purpose**: Central icon component with cva variants, lucide mapping
-- **Runtime**: Client/Server
-- **Depends on**: `lucide-react`, `class-variance-authority`, `@/lib/utils`
-- **Used by**: Many UI components
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+### Props
 
-### components/InfoTooltip.tsx
-- **Exports**: `InfoTooltip` (default)
-- **Purpose**: WAI-ARIA tip with optional custom trigger
-- **Runtime**: Client
-- **Depends on**: `@/components/ui/tooltip`, `@/components/ui/button`
-- **Used by**: Various UI tooltips
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+```typescript
+interface BreadcrumbItem {
+  label: string;        // Display text
+  href?: string;        // Link URL (omit for current/last page)
+  icon?: string;        // Optional icon name from Icon component
+}
 
-### components/link/index.tsx
-- **Exports**: `Link` (default)
-- **Purpose**: Prefetch-on-hover wrapper over Next.js Link per project rule
-- **Runtime**: Client
-- **Depends on**: `next/link`
-- **Used by**: App-wide links
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+interface StickyBreadcrumbProps {
+  items: BreadcrumbItem[];  // Array of breadcrumb items
+  className?: string;       // Optional additional CSS classes
+}
+```
 
-### components/NotificationBellClient.tsx
-- **Exports**: `NotificationBellClient` (default)
-- **Purpose**: Client bell with unread count and periodic refresh
-- **Runtime**: Client
-- **Depends on**: `@/hooks/useNotificationCounter`
-- **Used by**: Header/navigation
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+### Examples
 
-### components/seo/*
-- AdvancedAnalyticsReport, PerformanceClient, WebVitalsChart, WebVitalsCollector
-- **Purpose**: SEO/Performance dashboard client components
-- **Runtime**: Client
-- **Depends on**: project UI, analytics actions
-- **Used by**: Dashboard SEO pages
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+**Simple breadcrumb:**
+```tsx
+<StickyBreadcrumb
+  items={[
+    { label: 'الرئيسية', href: '/' },
+    { label: 'المنتجات' }
+  ]}
+/>
+```
 
-### components/ui/*
-- Shadcn-based primitives (accordion, alert, alert-dialog, avatar, button, card, dialog, drawer, dropdown, input, label, popover, progress, radio-group, scroll-area, select, separator, sheet, skeleton, tabs, textarea, tooltip, user-avatar, etc.)
-- **Purpose**: Reusable UI primitives for the app
-- **Runtime**: Client/Server depending on file
-- **Depends on**: `@/lib/utils`, `radix-ui`, `lucide-react`
-- **Used by**: App-wide
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+**With icons:**
+```tsx
+<StickyBreadcrumb
+  items={[
+    { label: 'الرئيسية', href: '/', icon: 'Home' },
+    { label: 'المطابخ', href: '/cuisines', icon: 'UtensilsCrossed' },
+    { label: 'إيطالي' }
+  ]}
+/>
+```
 
-### components/WhatsappShareButton.tsx
-- **Exports**: `WhatsappShareButton` (default)
-- **Purpose**: Share message to WhatsApp via wa.me
-- **Runtime**: Client
-- **Depends on**: `@/components/ui/button`
-- **Used by**: Marketing/share UIs
-- **DB models**: none
-- **SAFE TO DELETE**: NO
+**With custom styling:**
+```tsx
+<StickyBreadcrumb
+  items={breadcrumbItems}
+  className="border-t border-primary/20"
+/>
+```
 
-## Cross-flows
-- Icons and utils power many UI primitives.
-- Notification bell integrates with hooks and API count.
+### Technical Details
 
-## Usage audit (direct vs indirect)
-- Direct imports are widespread; primitives and icons are core dependencies across the UI.
+- **Fixed Position**: `top-14` (mobile) / `top-16` (desktop) - perfectly aligned below header
+- **Z-Index**: `z-40` - ensures visibility above content but below modals (header is z-50)
+- **Background**: `bg-background/98` - matches header opacity for visual consistency
+- **Backdrop Blur**: `backdrop-blur-md` - medium blur matching header glass-morphism
+- **Border**: `border-b border-border/30` - subtle separator with 30% opacity
+- **Shadow**: `shadow-sm` - subtle elevation effect like the header
+- **Transitions**: `transition-all duration-300` - smooth animations on state changes
+- **Responsive**: Automatically adjusts positioning based on screen size
+- **UX Best Practice**: Always visible during scroll for constant navigation context
 
-## Final deletion flags (based on deep scan)
-- All listed components → SAFE TO DELETE: NO
+### Integration Guide
 
+1. **Import the component** in your page file
+2. **Place it at the top** of your page return statement (before container)
+3. **Define your breadcrumb items** array with proper hierarchy
+4. **Last item should not have href** (represents current page)
 
+### Pages Currently Using This Component
+
+- `/cuisines` - Cuisine listing page
+
+### Best Practices
+
+- Keep breadcrumb hierarchy logical and shallow (max 4 levels)
+- Last item should always be the current page (no href)
+- Use clear, concise labels
+- Test on mobile to ensure touch targets are adequate
+- Ensure proper RTL text rendering for Arabic content
+
+### Accessibility
+
+- Uses semantic `<nav>` and `<ol>` elements
+- Includes `aria-label="Breadcrumb"` for screen readers
+- Proper link hierarchy with hover states
+- Sufficient color contrast for text visibility
