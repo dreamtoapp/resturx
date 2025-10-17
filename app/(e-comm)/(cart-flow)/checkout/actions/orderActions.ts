@@ -1,0 +1,283 @@
+"use server";
+
+import db from "@/lib/prisma";
+import { checkIsLogin } from "@/lib/check-is-login";
+import { getCart } from "@/app/(e-comm)/(cart-flow)/cart/actions/cartServerActions";
+import { z } from "zod";
+import { OrderNumberGenerator } from "@/app/(e-comm)/(cart-flow)/checkout/actions/orderNumberGenerator";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { formatCurrency, CurrencyCode } from "@/lib/formatCurrency";
+
+// Validation schema
+const checkoutSchema = z.object({
+  fullName: z.string()
+    .min(2, "الاسم يجب أن يكون حرفين على الأقل")
+    .max(50, "الاسم طويل جداً")
+    .regex(/^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s\u0020-\u007E]+$/, "يرجى إدخال اسم صحيح"),
+  phone: z.string()
+    .min(10, "رقم الهاتف يجب أن يكون 10 أرقام على الأقل")
+    .max(15, "رقم الهاتف طويل جداً")
+    .regex(/^[+]?[0-9\s\-\(\)]+$/, "رقم الهاتف غير صحيح")
+    .transform(phone => phone.replace(/\s/g, '')),
+  addressId: z.string().min(1, "يرجى اختيار عنوان التوصيل"),
+  shiftId: z.string().min(1, "يرجى اختيار وقت التوصيل"),
+  paymentMethod: z.enum(["CASH", "CARD", "WALLET"], {
+    errorMap: () => ({ message: "يرجى اختيار طريقة الدفع" })
+  }),
+  // Terms acceptance is no longer required; keep field optional for backward compatibility
+  termsAccepted: z.boolean().optional()
+});
+
+// Types
+interface PlatformSettings {
+  taxPercentage: number;
+  shippingFee: number;
+  minShipping: number;
+}
+
+interface OrderCalculation {
+  subtotal: number;
+  deliveryFee: number;
+  taxAmount: number;
+  total: number;
+}
+
+// Single Responsibility: Get platform settings (direct DB read; no API hop)
+async function getPlatformSettings(): Promise<PlatformSettings> {
+  try {
+    const company = await db.company.findFirst();
+    return {
+      taxPercentage: company?.taxPercentage ?? 15,
+      shippingFee: company?.shippingFee ?? 25,
+      minShipping: company?.minShipping ?? 200,
+    };
+  } catch (error) {
+    console.error('Error reading platform settings from DB:', error);
+    return { taxPercentage: 15, shippingFee: 25, minShipping: 200 };
+  }
+}
+
+// Single Responsibility: Calculate order totals
+function calculateOrderTotals(cart: any, platformSettings: PlatformSettings): OrderCalculation {
+  const subtotal = cart.items.reduce((sum: number, item: any) => {
+    // Safety check: skip items with null/undefined products
+    if (!item.product) {
+      console.log('[calculateOrderTotals] Skipping item with null product:', item.id);
+      return sum;
+    }
+
+    const effectivePrice = (item.product as any)?.discountedPrice || item.product?.price || 0;
+    return sum + effectivePrice * (item.quantity || 1);
+  }, 0);
+
+  const deliveryFee = subtotal >= platformSettings.minShipping ? 0 : platformSettings.shippingFee;
+  const taxAmount = subtotal * (platformSettings.taxPercentage / 100);
+  const total = subtotal + deliveryFee + taxAmount;
+
+  return { subtotal, deliveryFee, taxAmount, total };
+}
+
+// Single Responsibility: Validate and get address
+async function validateAddress(addressId: string, userId: string) {
+  const address = await db.address.findFirst({
+    where: { id: addressId, userId }
+  });
+
+  if (!address) {
+    throw new Error("العنوان المحدد غير صحيح أو غير موجود");
+  }
+
+  return address;
+}
+
+// Single Responsibility: Validate shift
+async function validateShift(shiftId: string) {
+  const shift = await db.shift.findUnique({
+    where: { id: shiftId }
+  });
+
+  if (!shift) {
+    throw new Error("وقت التوصيل المحدد غير متاح");
+  }
+
+  return shift;
+}
+
+// Single Responsibility: Update user information
+async function updateUserIfNeeded(user: any, validatedData: any) {
+  const updateUserData: any = {};
+
+  if (user.name !== validatedData.fullName) {
+    updateUserData.name = validatedData.fullName;
+  }
+  if (user.phone !== validatedData.phone) {
+    updateUserData.phone = validatedData.phone;
+  }
+
+  if (Object.keys(updateUserData).length > 0) {
+    await db.user.update({
+      where: { id: user.id },
+      data: updateUserData
+    });
+  }
+}
+
+// Single Responsibility: Create order in database
+async function createOrderInDatabase(orderData: any) {
+  return await db.order.create({
+    data: orderData,
+    include: {
+      items: { include: { product: true } },
+      address: true
+    }
+  });
+}
+
+// Single Responsibility: Send notifications to admins
+async function notifyAdmins(order: any, customerName: string, total: number) {
+  // Get company currency setting
+  const company = await db.company.findFirst();
+  const currency = (company?.defaultCurrency || 'SAR') as CurrencyCode;
+
+  const adminUsers = await db.user.findMany({
+    where: { role: { in: ['ADMIN', 'MARKETER'] } },
+    select: { id: true }
+  });
+
+  if (adminUsers.length === 0) return;
+
+  // Create database notifications
+  const notificationPromises = adminUsers.map(admin =>
+    db.userNotification.create({
+      data: {
+        title: 'طلب جديد',
+        body: `طلب جديد #${order.orderNumber} بقيمة ${formatCurrency(total, currency)} من ${customerName}`,
+        type: 'ORDER',
+        read: false,
+        userId: admin.id,
+        actionUrl: `/dashboard/management-orders`
+      },
+    })
+  );
+
+  await Promise.all(notificationPromises);
+
+  // Send real-time notifications
+  try {
+    const { pusherServer } = await import('@/lib/pusherServer');
+    const pusherPromises = adminUsers.map(admin =>
+      pusherServer?.trigger(`admin-${admin.id}`, 'new-order', {
+        orderId: order.orderNumber,
+        customer: customerName,
+        total,
+        createdAt: order.createdAt,
+      })
+    );
+    await Promise.all(pusherPromises);
+  } catch (error) {
+    console.error('Failed to send real-time notifications:', error);
+  }
+
+  // Push notifications removed - using Pusher real-time + database notifications only
+  console.log('📱 Push notifications disabled - using alternative notification methods');
+}
+
+// Single Responsibility: Revalidate cache
+function revalidateCache(userId: string) {
+  revalidatePath('/');
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/management-dashboard');
+  revalidatePath('/dashboard/management-orders');
+  revalidateTag('analyticsData');
+  revalidateTag('fetchOrders');
+  revalidateTag('userStats');
+  revalidateTag(`user-${userId}`);
+  revalidateTag('products');
+  revalidateTag('promotions');
+}
+
+// Main function - orchestrates the order creation process
+export async function createDraftOrder(formData: FormData) {
+  try {
+    // Get user and cart
+    const user = await checkIsLogin();
+    const cart = await getCart();
+
+    if (!user?.id) {
+      throw { code: 'REDIRECT_TO_LOGIN', message: 'User not authenticated' };
+    }
+
+    if (!cart?.items?.length) {
+      throw { code: 'REDIRECT_TO_HAPPYORDER', message: 'redirect to happyorder' };
+    }
+
+    // Validate form data
+    const validatedData = checkoutSchema.parse({
+      fullName: formData.get("fullName"),
+      phone: formData.get("phone"),
+      addressId: formData.get("addressId"),
+      shiftId: formData.get("shiftId"),
+      paymentMethod: formData.get("paymentMethod"),
+      termsAccepted: formData.get("termsAccepted") === "true"
+    });
+
+    // Validate address and shift
+    const [address] = await Promise.all([
+      validateAddress(validatedData.addressId, user.id),
+      validateShift(validatedData.shiftId)
+    ]);
+
+    // Update user if needed
+    await updateUserIfNeeded(user, validatedData);
+
+    // Get platform settings and calculate totals
+    const platformSettings = await getPlatformSettings();
+    const { total } = calculateOrderTotals(cart, platformSettings);
+
+    // Generate order number
+    const orderNumber = await OrderNumberGenerator.generateOrderNumber();
+
+    // Create order data
+    const orderData = {
+      orderNumber,
+      customerId: user.id,
+      addressId: validatedData.addressId,
+      status: "PENDING" as const,
+      amount: total,
+      paymentMethod: validatedData.paymentMethod,
+      shiftId: validatedData.shiftId,
+      deliveryInstructions: address.deliveryInstructions,
+      items: {
+        createMany: {
+          data: cart.items.map((ci: any) => ({
+            productId: ci.productId,
+            quantity: ci.quantity ?? 1,
+            price: ((ci.product as any)?.discountedPrice || ci.product?.price) ?? 0,
+          })),
+        },
+      },
+    };
+
+    // Create order
+    const order = await createOrderInDatabase(orderData);
+
+    // Send notifications (non-blocking)
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    notifyAdmins(order, validatedData.fullName, total);
+
+    // Revalidate cache (fast; keep synchronous)
+    revalidateCache(user.id);
+
+    return order.orderNumber;
+
+  } catch (error) {
+    console.error("Order creation error:", error);
+
+    if (error instanceof z.ZodError) {
+      const errorMessages = error.errors.map(err => err.message);
+      throw { validationErrors: errorMessages };
+    }
+
+    throw new Error("حدث خطأ أثناء إنشاء الطلب. يرجى المحاولة مرة أخرى");
+  }
+} 
