@@ -21,6 +21,7 @@ const SUPPORTED_TABLES = {
   feature: 'feature',
   testimonial: 'testimonial',
   populardishes: 'popularDish', // Maps to db.popularDish (@@map("populardishes") in schema)
+  restaurantpost: 'restaurantPost', // Maps to db.restaurantPost (RestaurantPost model)
 } as const;
 
 type TableName = keyof typeof SUPPORTED_TABLES;
@@ -190,6 +191,9 @@ export async function POST(req: NextRequest) {
         case 'testimonial':
           revalidateTag('about');
           revalidatePath('/about');
+          break;
+        case 'restaurantpost':
+          revalidatePath('/restaurant-portal/blog');
           break;
         default:
           break;

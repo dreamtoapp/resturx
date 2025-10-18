@@ -69,6 +69,9 @@ export default async function RestaurantPortalLayout({
     { href: '/restaurant-portal/features', icon: 'Star', label: 'المميزات' },
     { href: '/restaurant-portal/gallery', icon: 'Image', label: 'معرض الصور' },
     { href: '/restaurant-portal/orders', icon: 'Package', label: 'الطلبات' },
+    { href: '/restaurant-portal/reviews', icon: 'MessageSquare', label: 'التقييمات' },
+    { href: '/restaurant-portal/blog', icon: 'Newspaper', label: 'المدونة' },
+    { href: '/restaurant-portal/social-media', icon: 'Share2', label: 'وسائل التواصل' },
   ];
 
   return (
@@ -88,10 +91,10 @@ export default async function RestaurantPortalLayout({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/">
+            <Link href={`/restaurant/${restaurant.slug}`}>
               <button className="text-sm flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted">
-                <Icon name="Eye" className="h-4 w-4" />
-                <span>عرض الواجهة</span>
+                <Icon name="Store" className="h-4 w-4" />
+                <span>صفحة المطعم</span>
               </button>
             </Link>
           </div>
@@ -123,6 +126,8 @@ export default async function RestaurantPortalLayout({
     </div>
   );
 }
+
+
 
 
 

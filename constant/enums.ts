@@ -106,7 +106,8 @@ export enum UserRole {
   USER = 'USER',
   ADMIN = 'ADMIN',
   DRIVER = 'DRIVER',
-  CUSTOMER = 'CUSTOMER'
+  CUSTOMER = 'CUSTOMER',
+  RESTAURANT_OWNER = 'RESTAURANT_OWNER'
 }
 
 export enum questionQueryMode {

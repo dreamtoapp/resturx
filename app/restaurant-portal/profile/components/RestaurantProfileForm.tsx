@@ -18,6 +18,7 @@ const profileSchema = z.object({
   name: z.string().min(1, 'الاسم مطلوب'),
   description: z.string().optional(),
   phone: z.string().optional(),
+  whatsapp: z.string().optional(),
   email: z.string().email('صيغة البريد غير صحيحة').optional().or(z.literal('')),
   address: z.string().optional(),
   workingHours: z.string().optional(),
@@ -39,6 +40,7 @@ export default function RestaurantProfileForm({ restaurant }: { restaurant: any 
       name: restaurant.name || '',
       description: restaurant.description || '',
       phone: restaurant.phone || '',
+      whatsapp: restaurant.whatsapp || '',
       email: restaurant.email || '',
       address: restaurant.address || '',
       workingHours: restaurant.workingHours || '',
@@ -125,10 +127,16 @@ export default function RestaurantProfileForm({ restaurant }: { restaurant: any 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">البريد الإلكتروني</Label>
-                  <Input {...register('email')} type="email" placeholder="info@restaurant.com" />
-                  {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                  <Label htmlFor="whatsapp">رقم الواتساب</Label>
+                  <Input {...register('whatsapp')} type="tel" placeholder="+966..." />
+                  <p className="text-xs text-muted-foreground">سيظهر زر واتساب للعملاء في صفحة المطعم</p>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">البريد الإلكتروني</Label>
+                <Input {...register('email')} type="email" placeholder="info@restaurant.com" />
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -229,6 +237,8 @@ export default function RestaurantProfileForm({ restaurant }: { restaurant: any 
     </form>
   );
 }
+
+
 
 
 

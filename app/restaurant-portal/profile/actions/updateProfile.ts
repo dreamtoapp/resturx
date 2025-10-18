@@ -3,12 +3,15 @@
 import db from '@/lib/prisma';
 import { revalidateTag } from 'next/cache';
 
+// WhatsApp field added to Restaurant model
+
 export async function updateRestaurantProfile(
   restaurantId: string,
   data: {
     name: string;
     description?: string;
     phone?: string;
+    whatsapp?: string;
     email?: string;
     address?: string;
     workingHours?: string;
@@ -26,6 +29,7 @@ export async function updateRestaurantProfile(
         name: data.name,
         description: data.description || null,
         phone: data.phone || null,
+        whatsapp: data.whatsapp || null,
         email: data.email || null,
         address: data.address || null,
         workingHours: data.workingHours || null,
@@ -34,7 +38,7 @@ export async function updateRestaurantProfile(
         deliveryFee: data.deliveryFee || null,
         hasOwnDelivery: data.hasOwnDelivery || false,
         bio: data.bio || null,
-      },
+      } as any,
     });
 
     revalidateTag('restaurants');
@@ -51,6 +55,7 @@ export async function updateRestaurantProfile(
     };
   }
 }
+
 
 
 

@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils';
 interface WhatsAppButtonProps extends Omit<ButtonProps, 'onClick'> {
   phone?: string;
   defaultMessage?: string;
-  buttonVariant?: 'icon' | 'text' | 'footer';
+  buttonVariant?: 'icon' | 'text' | 'footer' | 'default' | 'link';
   showText?: boolean;
   className?: string;
+  children?: React.ReactNode;
 }
 
 const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
@@ -20,6 +21,7 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   buttonVariant = 'icon',
   showText = true,
   className,
+  children,
   ...props
 }) => {
   const handleClick = () => {
@@ -87,6 +89,41 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
           تواصل عبر واتساب
         </a>
       </div>
+    );
+  }
+
+  // Link variant (for inline links like in RestaurantInfoTab)
+  if (buttonVariant === 'link') {
+    if (!phone || phone.trim() === '') {
+      return null;
+    }
+
+    const normalized = convertToInternationalFormat(phone).replace('+', '');
+    const url = `https://wa.me/${normalized}?text=${encodeURIComponent(defaultMessage)}`;
+
+    return (
+      <a
+        href={url}
+        className={cn(className)}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...(props as any)}
+      >
+        {children}
+      </a>
+    );
+  }
+
+  // Default variant (custom button with full control over styling)
+  if (buttonVariant === 'default') {
+    return (
+      <Button
+        className={cn(className)}
+        onClick={handleClick}
+        {...props}
+      >
+        {children}
+      </Button>
     );
   }
 

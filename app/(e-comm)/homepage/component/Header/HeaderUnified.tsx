@@ -8,7 +8,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { UserRole } from '@/constant/enums';
 import Link from '@/components/link';
 import { ReactNode } from 'react';
-import { CarFront, Focus } from 'lucide-react';
+import { CarFront, Focus, Store } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import NotificationBellClient from '@/components/NotificationBellClient';
 import WhatsappMetaButton from './WhatsappMetaButton';
@@ -73,6 +73,11 @@ function DesktopHeader({ logo, logoAlt, isLoggedIn, user, notificationBell, wish
                             <CarFront size={16} />
                         </Link>
                     )}
+                    {user?.role === UserRole.RESTAURANT_OWNER && (
+                        <Link href="/restaurant-portal" className="p-2 rounded-lg bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 transition-colors">
+                            <Store size={16} />
+                        </Link>
+                    )}
 
                     <SearchBar />
                     <ThemeToggle />
@@ -130,6 +135,11 @@ function MobileHeader({ logo, logoAlt, isLoggedIn, user, notificationBell, unrea
                     {user?.role === UserRole.DRIVER && (
                         <Link href="/driver" className="p-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                             <CarFront size={14} />
+                        </Link>
+                    )}
+                    {user?.role === UserRole.RESTAURANT_OWNER && (
+                        <Link href="/restaurant-portal" className="p-1.5 rounded-md bg-orange-500 text-white hover:bg-orange-600 transition-colors">
+                            <Store size={14} />
                         </Link>
                     )}
                     <SearchBar />
