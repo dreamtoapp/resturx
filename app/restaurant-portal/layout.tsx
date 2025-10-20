@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import Link from '@/components/link';
 import { Icon } from '@/components/icons/Icon';
 import db from '@/lib/prisma';
+import RestaurantPortalHeader from './components/RestaurantPortalHeader';
+import RestaurantPortalSidebar from './components/RestaurantPortalSidebar';
 
 export const metadata = {
   title: 'بوابة المطعم',
@@ -30,22 +31,92 @@ export default async function RestaurantPortalLayout({
       slug: true,
       imageUrl: true,
       status: true,
+      rating: true,
     }
   });
 
   if (!restaurant) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center space-y-4">
-          <Icon name="Store" className="h-16 w-16 mx-auto text-muted-foreground" />
-          <h1 className="text-2xl font-bold">لا يوجد مطعم مسجل</h1>
-          <p className="text-muted-foreground">
-            لم يتم تعيين مطعم لحسابك بعد. يرجى التواصل مع الإدارة.
-          </p>
-        </div>
-      </div>
-    );
+    redirect('/auth/login?error=unauthorized');
   }
+
+  // Get today's date for filtering today's orders
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Get real counts for sidebar badges
+  const [dishesCount, servicesCount, featuresCount, imagesCount, videosCount, pendingOrdersCount, reviewsCount, todayOrdersCount] = await Promise.all([
+    // Count ALL dishes (using supplierId which maps to restaurant)
+    db.dish.count({
+      where: {
+        supplierId: restaurant.id
+      }
+    }),
+
+    // Count active services
+    db.restaurantService.count({
+      where: {
+        restaurantId: restaurant.id,
+        isActive: true
+      }
+    }),
+
+    // Count active features
+    db.restaurantFeature.count({
+      where: {
+        restaurantId: restaurant.id,
+        isActive: true
+      }
+    }),
+
+    // Count gallery images
+    db.restaurantImage.count({
+      where: {
+        restaurantId: restaurant.id
+      }
+    }),
+
+    // Count videos
+    db.restaurantVideo.count({
+      where: {
+        restaurantId: restaurant.id
+      }
+    }),
+
+    // Count pending orders (orders containing this restaurant's dishes)
+    db.orderItem.findMany({
+      where: {
+        product: {
+          supplierId: restaurant.id
+        },
+        order: {
+          status: { in: ['PENDING', 'ASSIGNED', 'IN_TRANSIT'] }
+        }
+      },
+      select: { orderId: true },
+      distinct: ['orderId']
+    }).then(items => items.length),
+
+    // Count all reviews
+    db.restaurantReview.count({
+      where: {
+        restaurantId: restaurant.id
+      }
+    }),
+
+    // Count today's orders (orders containing this restaurant's dishes created today)
+    db.order.count({
+      where: {
+        createdAt: { gte: today },
+        items: {
+          some: {
+            product: {
+              supplierId: restaurant.id
+            }
+          }
+        }
+      }
+    })
+  ]);
 
   if (restaurant.status === 'SUSPENDED') {
     return (
@@ -61,66 +132,34 @@ export default async function RestaurantPortalLayout({
     );
   }
 
-  const navItems = [
-    { href: '/restaurant-portal', icon: 'LayoutDashboard', label: 'لوحة التحكم' },
-    { href: '/restaurant-portal/profile', icon: 'Store', label: 'بيانات المطعم' },
-    { href: '/restaurant-portal/menu', icon: 'UtensilsCrossed', label: 'القائمة' },
-    { href: '/restaurant-portal/services', icon: 'Settings', label: 'الخدمات' },
-    { href: '/restaurant-portal/features', icon: 'Star', label: 'المميزات' },
-    { href: '/restaurant-portal/gallery', icon: 'Image', label: 'معرض الصور' },
-    { href: '/restaurant-portal/orders', icon: 'Package', label: 'الطلبات' },
-    { href: '/restaurant-portal/reviews', icon: 'MessageSquare', label: 'التقييمات' },
-    { href: '/restaurant-portal/blog', icon: 'Newspaper', label: 'المدونة' },
-    { href: '/restaurant-portal/social-media', icon: 'Share2', label: 'وسائل التواصل' },
-  ];
-
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
-            {restaurant.imageUrl && (
-              <div className="relative w-10 h-10 rounded-lg overflow-hidden">
-                <img src={restaurant.imageUrl} alt={restaurant.name} className="object-cover" />
-              </div>
-            )}
-            <div>
-              <h2 className="font-semibold">{restaurant.name}</h2>
-              <p className="text-xs text-muted-foreground">بوابة المطعم</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href={`/restaurant/${restaurant.slug}`}>
-              <button className="text-sm flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted">
-                <Icon name="Store" className="h-4 w-4" />
-                <span>صفحة المطعم</span>
-              </button>
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20" dir="rtl">
+      {/* Enhanced Header */}
+      <RestaurantPortalHeader
+        restaurant={restaurant}
+        user={session.user}
+      />
 
-      <div className="container flex gap-6 py-6">
-        {/* Sidebar */}
-        <aside className="w-64 flex-shrink-0 space-y-2">
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition"
-              >
-                <Icon name={item.icon as any} className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-        </aside>
+      <div className="flex">
+        {/* Enhanced Sidebar */}
+        <RestaurantPortalSidebar
+          restaurant={restaurant}
+          dishesCount={dishesCount}
+          servicesCount={servicesCount}
+          featuresCount={featuresCount}
+          imagesCount={imagesCount}
+          videosCount={videosCount}
+          pendingOrdersCount={pendingOrdersCount}
+          reviewsCount={reviewsCount}
+          todayOrdersCount={todayOrdersCount}
+          rating={restaurant.rating || 0}
+        />
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
-          {children}
+        <main className="flex-1 min-w-0 p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

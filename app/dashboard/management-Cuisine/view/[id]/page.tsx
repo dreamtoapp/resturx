@@ -14,7 +14,11 @@ const getCountry = async (countryId: string) => {
       translations: true,
       restaurants: {
         include: {
-          services: true,
+          services: {
+            include: {
+              masterService: true
+            }
+          },
           _count: {
             select: {
               dishes: true,
@@ -109,7 +113,7 @@ export default async function CountryDetails({ params }: PageProps<{ id: string 
                   <div className="flex flex-wrap gap-1 pt-2">
                     {restaurant.services.slice(0, 3).map((service) => (
                       <span key={service.id} className="text-xs text-muted-foreground">
-                        • {service.name}
+                        • {service.masterService?.name || 'خدمة'}
                       </span>
                     ))}
                   </div>

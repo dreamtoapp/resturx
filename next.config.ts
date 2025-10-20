@@ -6,6 +6,7 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
 });
 // Bundle analyzer
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -28,6 +29,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'source.unsplash.com' },
       { protocol: 'https', hostname: 'flagcdn.com' },
+      { protocol: 'https', hostname: 'img.youtube.com' }, // YouTube thumbnails
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

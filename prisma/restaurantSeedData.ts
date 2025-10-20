@@ -387,25 +387,27 @@ const dishesByCountry: Record<string, string[]> = {
   ],
 };
 
-// Restaurant services
-const restaurantServices = [
-  { name: 'واي فاي مجاني', icon: 'Wifi', description: 'إنترنت عالي السرعة' },
-  { name: 'موقف سيارات', icon: 'Car', description: 'موقف واسع ومجاني' },
-  { name: 'قاعات طعام', icon: 'Utensils', description: 'قاعات عائلية وعادية' },
-  { name: 'جلسات خارجية', icon: 'Coffee', description: 'تراس وحديقة' },
-  { name: 'موسيقى حية', icon: 'Music', description: 'في عطلة نهاية الأسبوع' },
-  { name: 'شاشات رياضية', icon: 'Tv', description: 'لمتابعة المباريات' },
-  { name: 'ألعاب أطفال', icon: 'Baby', description: 'منطقة آمنة للأطفال' },
-  { name: 'خدمة فاليت', icon: 'Parking', description: 'خدمة توقيف السيارات' },
-];
+// Restaurant services - NOW MANAGED BY MASTER LISTS
+// These are no longer used directly, kept for reference only
+// const restaurantServices = [
+//   { name: 'واي فاي مجاني', icon: 'Wifi', description: 'إنترنت عالي السرعة' },
+//   { name: 'موقف سيارات', icon: 'Car', description: 'موقف واسع ومجاني' },
+//   { name: 'قاعات طعام', icon: 'Utensils', description: 'قاعات عائلية وعادية' },
+//   { name: 'جلسات خارجية', icon: 'Coffee', description: 'تراس وحديقة' },
+//   { name: 'موسيقى حية', icon: 'Music', description: 'في عطلة نهاية الأسبوع' },
+//   { name: 'شاشات رياضية', icon: 'Tv', description: 'لمتابعة المباريات' },
+//   { name: 'ألعاب أطفال', icon: 'Baby', description: 'منطقة آمنة للأطفال' },
+//   { name: 'خدمة فاليت', icon: 'Parking', description: 'خدمة توقيف السيارات' },
+// ];
 
-// Restaurant features
-const restaurantFeatures = [
-  { title: 'طاهٍ حائز على جوائز', description: 'طاقم من أفضل الطهاة في المنطقة', icon: 'Star' },
-  { title: 'مكونات طازجة يومياً', description: 'نستورد مكونات طازجة كل يوم', icon: 'Utensils' },
-  { title: 'قائمة نباتية', description: 'خيارات متنوعة للنباتيين', icon: 'Coffee' },
-  { title: 'حلال معتمد', description: 'جميع أطباقنا حلال 100%', icon: 'BadgeCheck' },
-];
+// Restaurant features - NOW MANAGED BY MASTER LISTS
+// These are no longer used directly, kept for reference only
+// const restaurantFeatures = [
+//   { title: 'طاهٍ حائز على جوائز', description: 'طاقم من أفضل الطهاة في المنطقة', icon: 'Star' },
+//   { title: 'مكونات طازجة يومياً', description: 'نستورد مكونات طازجة كل يوم', icon: 'Utensils' },
+//   { title: 'قائمة نباتية', description: 'خيارات متنوعة للنباتيين', icon: 'Coffee' },
+//   { title: 'حلال معتمد', description: 'جميع أطباقنا حلال 100%', icon: 'BadgeCheck' },
+// ];
 
 async function clearRestaurantData() {
   logStep('Clearing existing restaurant data');
@@ -533,20 +535,29 @@ async function seedRestaurants(countries: any[], owners: any[]) {
 async function seedRestaurantServices(restaurants: any[]) {
   logStep('Seeding restaurant services');
 
+  // Get all master services
+  const masterServices = await db.masterService.findMany({
+    where: { isActive: true }
+  });
+
+  if (masterServices.length === 0) {
+    logDone('Restaurant Services', 0);
+    console.log('⚠️  No master services available');
+    return;
+  }
+
   let totalServices = 0;
   for (const restaurant of restaurants) {
-    // Each restaurant gets 3-6 random services
-    const serviceCount = 3 + Math.floor(Math.random() * 4);
-    const shuffled = [...restaurantServices].sort(() => Math.random() - 0.5);
+    // Each restaurant gets 3-6 random services from master list
+    const serviceCount = Math.min(3 + Math.floor(Math.random() * 4), masterServices.length);
+    const shuffled = [...masterServices].sort(() => Math.random() - 0.5);
     const selectedServices = shuffled.slice(0, serviceCount);
 
     for (let i = 0; i < selectedServices.length; i++) {
       await db.restaurantService.create({
         data: {
           restaurantId: restaurant.id,
-          name: selectedServices[i].name,
-          description: selectedServices[i].description,
-          icon: selectedServices[i].icon,
+          masterServiceId: selectedServices[i].id,
           isActive: true,
           displayOrder: i,
         },
@@ -561,20 +572,29 @@ async function seedRestaurantServices(restaurants: any[]) {
 async function seedRestaurantFeatures(restaurants: any[]) {
   logStep('Seeding restaurant features');
 
+  // Get all master features
+  const masterFeatures = await db.masterFeature.findMany({
+    where: { isActive: true }
+  });
+
+  if (masterFeatures.length === 0) {
+    logDone('Restaurant Features', 0);
+    console.log('⚠️  No master features available');
+    return;
+  }
+
   let totalFeatures = 0;
   for (const restaurant of restaurants) {
-    // Each restaurant gets 2-4 features
-    const featureCount = 2 + Math.floor(Math.random() * 3);
-    const shuffled = [...restaurantFeatures].sort(() => Math.random() - 0.5);
+    // Each restaurant gets 2-4 features from master list
+    const featureCount = Math.min(2 + Math.floor(Math.random() * 3), masterFeatures.length);
+    const shuffled = [...masterFeatures].sort(() => Math.random() - 0.5);
     const selectedFeatures = shuffled.slice(0, featureCount);
 
     for (let i = 0; i < selectedFeatures.length; i++) {
       await db.restaurantFeature.create({
         data: {
           restaurantId: restaurant.id,
-          title: selectedFeatures[i].title,
-          description: selectedFeatures[i].description,
-          icon: selectedFeatures[i].icon,
+          masterFeatureId: selectedFeatures[i].id,
           isActive: true,
           displayOrder: i,
         },

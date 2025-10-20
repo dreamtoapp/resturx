@@ -6,6 +6,8 @@ import InstagramIcon from '@/components/icons/InstagramIcon';
 import SnapchatIcon from '@/components/icons/SnapchatIcon';
 import TikTokIcon from '@/components/icons/TikTokIcon';
 import TwitterIcon from '@/components/icons/TwitterIcon';
+import ShareButton from './ShareButton';
+import RestaurantFavoriteButton from './RestaurantFavoriteButton';
 
 // Helper function to format review count
 function formatReviewCount(count: number): string {
@@ -30,6 +32,7 @@ function getReviewBadgeColor(count: number): string {
 
 interface RestaurantHeaderProps {
   restaurant: {
+    id: string;
     name: string;
     slug: string;
     isVerified?: boolean;
@@ -47,6 +50,7 @@ interface RestaurantHeaderProps {
     snapchat?: string | null;
     tiktok?: string | null;
     twitter?: string | null;
+    qrCodeUrl?: string | null;
   };
 }
 
@@ -105,12 +109,15 @@ export default function RestaurantHeader({ restaurant }: RestaurantHeaderProps) 
       </div>
 
       {/* Quick Actions & Social Media */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-3 flex-wrap">
+        <RestaurantFavoriteButton
+          restaurantId={restaurant.id}
+          restaurantName={restaurant.name}
+        />
         {restaurant.phone && (
-          <a href={`tel:${restaurant.phone}`}>
-            <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-muted">
-              <Icon name="Phone" className="h-4 w-4" />
-              <span>اتصل</span>
+          <a href={`tel:${restaurant.phone}`} title="اتصل">
+            <button className="flex items-center justify-center w-10 h-10 border rounded-lg hover:bg-muted hover:border-primary/50 transition-all group">
+              <Icon name="Phone" className="h-5 w-5 group-hover:text-primary transition-colors" />
             </button>
           </a>
         )}
@@ -119,21 +126,20 @@ export default function RestaurantHeader({ restaurant }: RestaurantHeaderProps) 
             href={`https://www.google.com/maps?q=${restaurant.latitude},${restaurant.longitude}`}
             target="_blank"
             rel="noopener noreferrer"
+            title="الموقع"
           >
-            <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-muted">
-              <Icon name="MapPin" className="h-4 w-4" />
-              <span>الموقع</span>
+            <button className="flex items-center justify-center w-10 h-10 border rounded-lg hover:bg-muted hover:border-primary/50 transition-all group">
+              <Icon name="MapPin" className="h-5 w-5 group-hover:text-primary transition-colors" />
             </button>
           </a>
         )}
-        <Link href={`/restaurant/${restaurant.slug}/reviews`}>
-          <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-muted transition-all hover:border-primary/50 relative group">
-            <Icon name="MessageSquare" className="h-4 w-4 group-hover:text-primary transition-colors" />
-            <span className="group-hover:text-primary transition-colors">التقييمات</span>
+        <Link href={`/restaurant/${restaurant.slug}/reviews`} title="التقييمات">
+          <button className="flex items-center justify-center w-10 h-10 border rounded-lg hover:bg-muted transition-all hover:border-primary/50 relative group">
+            <Icon name="MessageSquare" className="h-5 w-5 group-hover:text-primary transition-colors" />
             {restaurant.reviewCount !== undefined && restaurant.reviewCount > 0 && (
               <Badge
                 className={`
-                  ml-1 font-semibold text-xs px-2 py-0.5
+                  absolute -top-2 -right-2 font-semibold text-xs px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center
                   transition-all duration-300 ease-out
                   group-hover:scale-110 group-hover:shadow-xl
                   animate-in fade-in slide-in-from-left-2
@@ -146,16 +152,15 @@ export default function RestaurantHeader({ restaurant }: RestaurantHeaderProps) 
             )}
           </button>
         </Link>
+        <ShareButton
+          restaurantName={restaurant.name}
+          restaurantSlug={restaurant.slug}
+          qrCodeUrl={restaurant.qrCodeUrl || undefined}
+        />
         {restaurant.post?.isPublished && (
-          <Link href={`/restaurant/${restaurant.slug}/blog`}>
-            <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-muted transition-all hover:border-primary/50 relative group">
-              <Icon name="Newspaper" className="h-4 w-4 group-hover:text-primary transition-colors" />
-              <span className="group-hover:text-primary transition-colors">المدونة</span>
-              <Badge
-                className="ml-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-0.5 font-semibold shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-all duration-300 animate-pulse"
-              >
-                جديد
-              </Badge>
+          <Link href={`/restaurant/${restaurant.slug}/blog`} title="المدونة">
+            <button className="flex items-center justify-center w-10 h-10 border rounded-lg hover:bg-muted transition-all hover:border-primary/50 group">
+              <Icon name="BookOpen" className="h-5 w-5 group-hover:text-primary transition-colors" />
             </button>
           </Link>
         )}

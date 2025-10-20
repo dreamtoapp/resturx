@@ -34,6 +34,8 @@ export const navigationItems = [
       { label: 'الأطباق', href: '/dashboard/management-products', icon: 'UtensilsCrossed' },
       { label: 'المطاعم', href: '/dashboard/management-categories', icon: 'Store' },
       { label: 'أنواع المطابخ', href: '/dashboard/management-Cuisine', icon: 'ChefHat' },
+      { label: 'الخدمات', href: '/dashboard/management-services', icon: 'Settings' },
+      { label: 'المميزات', href: '/dashboard/management-features', icon: 'Star' },
       {
         label: 'العروض',
         href: '/dashboard/management-offer',

@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Icon } from '@/components/icons/Icon';
-import { getServiceIcon } from '../helpers/getServiceIcon';
+import Image from 'next/image';
 
 interface RestaurantOverviewTabProps {
   restaurant: {
@@ -9,15 +9,19 @@ interface RestaurantOverviewTabProps {
     specialties?: string[];
     services?: Array<{
       id: string;
-      icon: string;
-      name: string;
-      description?: string | null;
+      masterService: {
+        name: string;
+        imageUrl?: string | null;
+        description?: string | null;
+      };
     }>;
     features?: Array<{
       id: string;
-      icon: string;
-      title: string;
-      description: string;
+      masterFeature: {
+        title: string;
+        imageUrl?: string | null;
+        description: string;
+      };
     }>;
     deliveryTime?: string | null;
     minOrder?: number | null;
@@ -70,13 +74,23 @@ export default function RestaurantOverviewTab({ restaurant }: RestaurantOverview
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {restaurant.services.map((service) => (
                 <div key={service.id} className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-xl">{getServiceIcon(service.icon)}</span>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    {service.masterService.imageUrl ? (
+                      <Image
+                        src={service.masterService.imageUrl}
+                        alt={service.masterService.name}
+                        width={24}
+                        height={24}
+                        className="object-contain"
+                      />
+                    ) : (
+                      <Icon name="CheckCircle2" className="w-5 h-5 text-primary" />
+                    )}
                   </div>
                   <div>
-                    <p className="font-medium text-sm">{service.name}</p>
-                    {service.description && (
-                      <p className="text-xs text-muted-foreground">{service.description}</p>
+                    <p className="font-medium text-sm">{service.masterService.name}</p>
+                    {service.masterService.description && (
+                      <p className="text-xs text-muted-foreground">{service.masterService.description}</p>
                     )}
                   </div>
                 </div>
@@ -97,13 +111,23 @@ export default function RestaurantOverviewTab({ restaurant }: RestaurantOverview
               {restaurant.features.map((feature) => (
                 <div key={feature.id} className="flex gap-3 p-3 rounded-lg bg-muted/50">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-2xl">{getServiceIcon(feature.icon)}</span>
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                      {feature.masterFeature.imageUrl ? (
+                        <Image
+                          src={feature.masterFeature.imageUrl}
+                          alt={feature.masterFeature.title}
+                          width={28}
+                          height={28}
+                          className="object-contain"
+                        />
+                      ) : (
+                        <Icon name="Star" className="w-6 h-6 text-primary" />
+                      )}
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    <h3 className="font-semibold mb-1">{feature.masterFeature.title}</h3>
+                    <p className="text-sm text-muted-foreground">{feature.masterFeature.description}</p>
                   </div>
                 </div>
               ))}

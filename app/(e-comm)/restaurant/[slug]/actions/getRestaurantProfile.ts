@@ -13,19 +13,34 @@ export async function getRestaurantProfile(slug: string) {
         country: true,
         services: {
           where: { isActive: true },
+          include: { masterService: true },
           orderBy: { displayOrder: 'asc' }
         },
         features: {
           where: { isActive: true },
+          include: { masterFeature: true },
           orderBy: { displayOrder: 'asc' }
         },
         images: {
           orderBy: { order: 'asc' }
         },
+        videos: {
+          orderBy: { order: 'asc' },
+          select: {
+            id: true,
+            videoId: true,
+            title: true,
+            description: true,
+            thumbnailUrl: true,
+          }
+        },
         dishes: {
           where: { published: true, outOfStock: false },
           take: 12,
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          include: {
+            dishCategory: true
+          }
         },
         post: true, // One-to-one relation, filter in component
         reviews: {
@@ -36,7 +51,12 @@ export async function getRestaurantProfile(slug: string) {
           select: {
             reviews: {
               where: { isApproved: true } // Count only approved reviews
-            }
+            },
+            dishes: {
+              where: { published: true, outOfStock: false }
+            },
+            images: true,
+            videos: true
           }
         }
       },
@@ -57,7 +77,10 @@ export async function getRestaurantProfile(slug: string) {
     return {
       ...restaurantData,
       rating: calculatedRating, // ✅ REAL calculated rating
-      reviewCount: _count.reviews // ✅ REAL count from database
+      reviewCount: _count.reviews, // ✅ REAL count from database
+      dishesCount: _count.dishes, // ✅ Total dishes count
+      imagesCount: _count.images, // ✅ Total images count
+      videosCount: _count.videos // ✅ Total videos count
     };
   } catch (error) {
     console.error('Error fetching restaurant:', error);

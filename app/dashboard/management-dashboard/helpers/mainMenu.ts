@@ -26,6 +26,9 @@ export const menuGroups = [
       { title: 'الأطباق', url: '/dashboard/management-products', icon: 'UtensilsCrossed' },
       { title: 'المطاعم', url: '/dashboard/management-categories', icon: 'Store' },
       { title: 'أنواع المطابخ', url: '/dashboard/management-Cuisine', icon: 'ChefHat' },
+      { title: 'أصناف الأطباق', url: '/dashboard/management-dish-categories', icon: 'Tags' },
+      { title: 'الخدمات الرئيسية', url: '/dashboard/management-services', icon: 'Wifi' },
+      { title: 'المميزات الرئيسية', url: '/dashboard/management-features', icon: 'Star' },
       // نقل "العروض" إلى مجموعة المنتجات
       {
         title: 'العروض',

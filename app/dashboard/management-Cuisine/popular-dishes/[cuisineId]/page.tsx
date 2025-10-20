@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icons/Icon';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import {
   getPopularDishesByCuisine,
@@ -47,10 +48,12 @@ export default async function PopularDishesPage({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               {cuisine.logo && (
-                <img
+                <Image
                   src={cuisine.logo}
                   alt={cuisine.name}
-                  className="h-12 w-12 rounded-lg object-contain bg-muted p-1"
+                  width={48}
+                  height={48}
+                  className="rounded-lg object-contain bg-muted p-1"
                 />
               )}
               <div>

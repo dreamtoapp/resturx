@@ -51,6 +51,19 @@ enum RequestType {
   IMPROVEMENT
 }
 
+enum OrderType {
+  DINE_IN   // داخل المطعم
+  DINE_OUT  // توصيل خارجي
+}
+
+enum DineInOrderStatus {
+  NEW           // جديد
+  PREPARING     // قيد التحضير
+  READY         // جاهز
+  COMPLETED     // مكتمل
+  CANCELLED     // ملغى
+}
+
 enum TermType {
   WEBSITE_POLICY
   RETURN_POLICY
@@ -220,15 +233,26 @@ model Restaurant {
   suspendedBy      String?          @db.ObjectId // Admin who suspended
   suspensionReason String?
 
+  // QR CODE TRACKING
+  qrCodeUrl       String?   // Cached QR code image URL (Cloudinary)
+  qrCodeGenerated DateTime? // When QR was last generated
+  qrScanCount     Int       @default(0) // Total scans
+  lastQrScan      DateTime? // Last scan timestamp
+
   // RELATIONS
+  qrScans         QRCodeScan[] // QR code scan tracking
   dishes          Dish[]                  @relation("RestaurantDishes") // Direct relation to dishes
   dishAssignments RestaurantDish[]        @relation("RestaurantDishAssignments") // Join table with dishes
   translations    RestaurantTranslation[]
   services        RestaurantService[] // Dynamic services
   features        RestaurantFeature[] // Dynamic features
   images          RestaurantImage[] // Gallery images
+  videos          RestaurantVideo[] // YouTube videos
   reviews         RestaurantReview[] // Customer reviews
   post            RestaurantPost? // Single blog post
+  favorites       RestaurantFavorite[] // Users who favorited this restaurant
+  tables          RestaurantTable[] // Restaurant tables
+  dineInOrders    DineInOrder[]     @relation("RestaurantDineInOrders") // Dine-in orders
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -255,41 +279,107 @@ model RestaurantTranslation {
 }
 
 // ============================================
-// RESTAURANT SERVICES (Dynamic)
+// MASTER SERVICES (Centralized - Super Admin)
 // ============================================
 
-model RestaurantService {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  restaurantId String     @db.ObjectId
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  icon         String // Icon name: "Wifi", "Car", "Utensils", "Coffee", etc.
-  name         String // Service name (e.g., "WiFi مجاني", "موقف سيارات")
-  description  String? // Optional description
-  isActive     Boolean    @default(true)
-  displayOrder Int        @default(0) // For sorting
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@index([restaurantId])
+model MasterService {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique // e.g., "WiFi مجاني"
+  nameEn      String?  // English translation
+  imageUrl    String?  // Icon/image URL (Cloudinary or external)
+  description String?
+  category    String?  // e.g., "amenities", "payment", "dining"
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  restaurants RestaurantService[]
+  
+  @@map("masterservices")
 }
 
 // ============================================
-// RESTAURANT FEATURES
+// MASTER FEATURES (Centralized - Super Admin)
+// ============================================
+
+model MasterFeature {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String   @unique // e.g., "Award-winning chef"
+  titleEn     String?  // English translation
+  imageUrl    String?  // Icon/image URL (Cloudinary or external)
+  description String
+  category    String?  // e.g., "quality", "experience", "specialty"
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  restaurants RestaurantFeature[]
+  
+  @@map("masterfeatures")
+}
+
+// ============================================
+// MASTER DISH CATEGORIES (Centralized - Super Admin)
+// ============================================
+
+model MasterDishCategory {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique // e.g., "حلويات", "مقبلات"
+  nameEn      String?  // English translation: "Desserts", "Appetizers"
+  imageUrl    String?  // Optional icon/image URL
+  description String?
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  dishes      Dish[]   @relation("DishCategory")
+  
+  @@map("masterdishcategories")
+}
+
+// ============================================
+// RESTAURANT SERVICES (Restaurant Selection)
+// ============================================
+
+model RestaurantService {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  restaurantId    String        @db.ObjectId
+  restaurant      Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  masterServiceId String        @db.ObjectId
+  masterService   MasterService @relation(fields: [masterServiceId], references: [id], onDelete: Cascade)
+  isActive        Boolean       @default(true)
+  displayOrder    Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@unique([restaurantId, masterServiceId])
+  @@index([restaurantId])
+  @@index([masterServiceId])
+  @@map("restaurantservices")
+}
+
+// ============================================
+// RESTAURANT FEATURES (Restaurant Selection)
 // ============================================
 
 model RestaurantFeature {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  restaurantId String     @db.ObjectId
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  icon         String // Icon name: "Star", "Award", "Leaf", "Fire", etc.
-  title        String // Feature title (e.g., "Award-winning chef")
-  description  String // Feature description
-  isActive     Boolean    @default(true)
-  displayOrder Int        @default(0) // For sorting
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  restaurantId    String        @db.ObjectId
+  restaurant      Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  masterFeatureId String        @db.ObjectId
+  masterFeature   MasterFeature @relation(fields: [masterFeatureId], references: [id], onDelete: Cascade)
+  isActive        Boolean       @default(true)
+  displayOrder    Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@unique([restaurantId, masterFeatureId])
   @@index([restaurantId])
+  @@index([masterFeatureId])
+  @@map("restaurantfeatures")
 }
 
 // ============================================
@@ -306,6 +396,29 @@ model RestaurantImage {
   createdAt    DateTime   @default(now())
 
   @@index([restaurantId])
+}
+
+// ============================================
+// RESTAURANT VIDEOS (YouTube)
+// ============================================
+
+model RestaurantVideo {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  restaurantId String     @db.ObjectId
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  youtubeUrl   String // Full YouTube URL
+  videoId      String // Extracted YouTube video ID
+  title        String // Video title
+  description  String? // Optional description
+  thumbnailUrl String? // YouTube thumbnail URL (auto-extracted)
+  order        Int     @default(0) // Display order
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([restaurantId])
+  @@map("restaurantvideos")
 }
 
 // ============================================
@@ -371,6 +484,30 @@ model RestaurantPost {
 }
 
 // ============================================
+// QR CODE SCAN TRACKING
+// ============================================
+
+model QRCodeScan {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  restaurantId String     @db.ObjectId
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  // Scan metadata
+  scannedAt    DateTime   @default(now())
+  ipAddress    String?    // For unique visitor tracking
+  userAgent    String?    // Device info (iOS/Android/Desktop)
+  referrer     String?    // Where they came from
+  
+  // Location (from IP geolocation - optional)
+  city         String?
+  country      String?
+  
+  @@index([restaurantId])
+  @@index([scannedAt])
+  @@map("qrcodescans")
+}
+
+// ============================================
 // RESTAURANT-DISH JOIN TABLE (was CategoryProduct)
 // ============================================
 
@@ -410,6 +547,10 @@ model Dish {
   type       String     @default("dish")
   supplier   Restaurant @relation("RestaurantDishes", fields: [supplierId], references: [id])
 
+  // DISH CATEGORY RELATIONSHIP (optional)
+  dishCategoryId String?              @db.ObjectId
+  dishCategory   MasterDishCategory? @relation("DishCategory", fields: [dishCategoryId], references: [id])
+
   // EXISTING PRODUCT FIELDS (kept for backward compatibility)
   productCode String?
   gtin        String?
@@ -445,6 +586,7 @@ model Dish {
   categoryAssignments   CategoryProduct[] // Old join table (backward compatibility)
   restaurantAssignments RestaurantDish[]  @relation("DishRestaurantAssignments") // New join table
   offerAssignments      OfferProduct[]
+  dineInOrderItems      DineInOrderItem[] @relation("DishDineInOrders") // Dine-in order items
 
   tags         String[]          @default([])
   translations DishTranslation[]
@@ -495,6 +637,7 @@ model User {
   otpCode             String?            @default("1234")
   reviews             Review[] // User's product reviews
   wishlist            WishlistItem[] // User's wishlist items
+  restaurantFavorites RestaurantFavorite[] // User's favorite restaurants
   cart                Cart? // User's cart
   UserNotification    UserNotification[]
   errorLogs           ErrorLog[]
@@ -516,6 +659,7 @@ model User {
   addresses         Address[]
   orderRatings      OrderRating[] // Ratings submitted by this user
   restaurantReviews RestaurantReview[] @relation("CustomerReviews") // Restaurant reviews by this user
+  dineInOrders      DineInOrder[]      @relation("CustomerDineInOrders") // Dine-in orders by this customer
 }
 
 model Account {
@@ -893,6 +1037,19 @@ model WishlistItem {
   @@unique([userId, productId])
 }
 
+// Restaurant Favorites Model
+model RestaurantFavorite {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String     @db.ObjectId
+  restaurantId String     @db.ObjectId
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  
+  @@unique([userId, restaurantId])
+  @@map("restaurantfavorites")
+}
+
 // Category Model
 model Category {
   id                 String                @id @default(auto()) @map("_id") @db.ObjectId
@@ -1148,4 +1305,72 @@ model WhatsappMessageStatus {
   occurredAt  DateTime @default(now())
 
   @@unique([waMessageId, occurredAt])
+}
+
+model DineInOrder {
+  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber  String             @unique
+  restaurantId String             @db.ObjectId
+  restaurant   Restaurant         @relation("RestaurantDineInOrders", fields: [restaurantId], references: [id])
+  customerId   String             @db.ObjectId
+  customer     User               @relation("CustomerDineInOrders", fields: [customerId], references: [id])
+  
+  tableNumber  String             // Changed from Int to String
+  tableId      String?            @db.ObjectId // Optional link to RestaurantTable
+  table        RestaurantTable?   @relation(fields: [tableId], references: [id])
+  orderType    OrderType          @default(DINE_IN)
+  status       DineInOrderStatus  @default(NEW)
+  
+  subtotal     Float
+  taxRate      Float              @default(0.15)
+  taxAmount    Float
+  total        Float
+  
+  items        DineInOrderItem[]
+  
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  completedAt  DateTime?
+  
+  @@index([restaurantId, status])
+  @@index([tableNumber])
+  @@index([tableId])
+  @@map("dineinorders")
+}
+
+model DineInOrderItem {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String       @db.ObjectId
+  order     DineInOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  dishId    String       @db.ObjectId
+  dish      Dish         @relation("DishDineInOrders", fields: [dishId], references: [id])
+  dishName  String
+  dishImage String?
+  quantity  Int
+  price     Float
+  notes     String?      @default("")
+  createdAt DateTime     @default(now())
+  
+  @@map("dineinorderitems")
+}
+
+// ============================================
+// RESTAURANT TABLES
+// ============================================
+
+model RestaurantTable {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  restaurantId String        @db.ObjectId
+  tableNumber  String        // Can be "1", "A1", "VIP-5", etc.
+  capacity     Int           // Number of seats
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders       DineInOrder[]
+  
+  @@unique([restaurantId, tableNumber])
+  @@index([restaurantId])
+  @@map("restauranttables")
 }

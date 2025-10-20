@@ -11,6 +11,7 @@ import { revalidateTag, revalidatePath } from 'next/cache';
 const SUPPORTED_TABLES = {
   user: 'user',
   product: 'product',
+  dishes: 'dish', // Maps to db.dish (Dish model for restaurants)
   supplier: 'supplier',
   suppliers: 'country', // Maps to db.country (@@map("suppliers") in schema)
   category: 'category',
@@ -171,6 +172,10 @@ export async function POST(req: NextRequest) {
         case 'product':
           revalidateTag('products');
           revalidatePath('/');
+          break;
+        case 'dishes':
+          revalidatePath('/restaurant-portal/menu');
+          revalidatePath('/restaurant-portal');
           break;
         case 'company':
           revalidateTag('company');

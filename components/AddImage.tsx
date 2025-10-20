@@ -9,6 +9,15 @@ import React, {
 import Image from 'next/image';
 import { Icon } from '@/components/icons/Icon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface AddImageProps {
   url?: string;
@@ -57,6 +66,7 @@ const AddImage: React.FC<AddImageProps> = ({
   const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
   const [progress, setProgress] = useState(0);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   useEffect(() => {
     setPreview(url);
@@ -337,7 +347,15 @@ const AddImage: React.FC<AddImageProps> = ({
               <AlertDescription className="text-destructive-foreground">
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate">{error}</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowErrorDialog(true); }}
+                      className="px-3 py-1 rounded bg-background text-foreground border border-border hover:bg-background/90 font-medium text-xs"
+                    >
+                      <Icon name="Info" className="h-3 w-3 inline ml-1" />
+                      التفاصيل
+                    </button>
                     {file && !loading && (
                       <button
                         type="button"
@@ -364,6 +382,14 @@ const AddImage: React.FC<AddImageProps> = ({
           <div role="alert" aria-live="polite" className="absolute top-2 left-2 right-2 bg-destructive/95 backdrop-blur-sm text-destructive-foreground text-sm p-3 rounded shadow-lg border border-destructive flex items-center justify-between gap-2 z-20">
             <span className="truncate font-medium">{error}</span>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowErrorDialog(true); }}
+                className="px-3 py-1 rounded bg-background text-foreground border border-border hover:bg-background/90 font-medium text-xs"
+              >
+                <Icon name="Info" className="h-3 w-3 inline ml-1" />
+                التفاصيل
+              </button>
               {file && !loading && (
                 <button
                   type="button"
@@ -385,8 +411,105 @@ const AddImage: React.FC<AddImageProps> = ({
           </div>
         )
       )}
+
+      {/* Error Details Dialog */}
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent className="sm:max-w-[600px]" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Icon name="AlertCircle" className="h-5 w-5" />
+              تفاصيل الخطأ - فشل رفع الصورة
+            </DialogTitle>
+            <DialogDescription>
+              معلومات تفصيلية عن الخطأ الذي حدث أثناء رفع الصورة
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Error Code */}
+            {errorCode && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-foreground">رمز الخطأ:</h4>
+                <div className="p-3 bg-muted rounded-md">
+                  <code className="text-sm text-destructive font-mono">{errorCode}</code>
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">رسالة الخطأ:</h4>
+              <div className="p-3 bg-muted rounded-md max-h-[200px] overflow-y-auto">
+                <p className="text-sm text-foreground whitespace-pre-wrap break-words">{error}</p>
+              </div>
+            </div>
+
+            {/* Upload Info */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">معلومات الرفع:</h4>
+              <div className="p-3 bg-muted rounded-md space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">الجدول:</span>
+                  <span className="font-mono">{table}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">الحقل:</span>
+                  <span className="font-mono">{tableField}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">معرف السجل:</span>
+                  <span className="font-mono text-xs">{recordId}</span>
+                </div>
+                {folder && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">المجلد:</span>
+                    <span className="font-mono">{folder}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Suggested Actions */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+              <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">الإجراءات المقترحة:</h4>
+              <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+                <li>تأكد من اتصالك بالإنترنت</li>
+                <li>تحقق من حجم الصورة (الحد الأقصى 5 ميجا)</li>
+                <li>تأكد من نوع الملف (JPEG, PNG, WebP, AVIF)</li>
+                <li>حاول رفع صورة أخرى</li>
+                <li>إذا استمرت المشكلة، تواصل مع الدعم الفني</li>
+              </ul>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowErrorDialog(false)}
+            >
+              إغلاق
+            </Button>
+            {file && !loading && (
+              <Button
+                type="button"
+                onClick={() => {
+                  setShowErrorDialog(false);
+                  setError('');
+                  setErrorCode(undefined);
+                  handleUpload(file);
+                }}
+              >
+                <Icon name="RefreshCw" className="h-4 w-4 ml-2" />
+                إعادة المحاولة
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
 
 export default AddImage;

@@ -11,7 +11,7 @@ import {
     ChevronDown, Menu, LocateFixed, Tag, Share2, Flame, Star, Server, Download, Bug, Bell, Globe, History, MessageSquare, MessageCircle, Wrench,
     ShoppingCart, ShoppingBag, CreditCard, LogOut, BookOpen, Settings, Grid3X3, Shield, BarChart3, BarChart2, Megaphone, Database, MousePointerBan,
     Building2, MapPin, Cog, Palette, RotateCcw, Undo, Redo, File, Expand, Eye, Lock, Key, UtensilsCrossed,
-    Bold, Italic, ListOrdered, Link, Unlink, Pilcrow
+    Bold, Italic, ListOrdered, Link, Unlink, Pilcrow, Video, Play, Image, GripVertical, Save, QrCode, Lightbulb
 } from 'lucide-react';
 
 // Local iconVariants definition (copied from lib/utils)
@@ -61,7 +61,7 @@ const iconMap = {
     ChevronDown, LocateFixed, Tag, Menu, Star, Share2, Flame, Server, Download, Bug, Bell, Globe, History, MessageSquare, MessageCircle, Wrench,
     ShoppingCart, ShoppingBag, CreditCard, LogOut, Grid3X3, Settings, BookOpen, Shield, BarChart3, BarChart2, Megaphone, Database, MousePointerBan,
     Building2, MapPin, Cog, Palette, RotateCcw, Undo, Redo, File, Expand, Eye, Trash, Lock, Key, UtensilsCrossed,
-    Bold, Italic, ListOrdered, Link, Unlink, Pilcrow
+    Bold, Italic, ListOrdered, Link, Unlink, Pilcrow, Video, Play, Image, GripVertical, Save, QrCode, Lightbulb
 };
 
 // Types for size and variant based on iconVariants
