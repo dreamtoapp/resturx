@@ -22,7 +22,6 @@ const nextConfig: NextConfig = {
   },
   // Image optimization
   images: {
-    unoptimized: process.env.NODE_ENV === 'production', // Disable optimization on Vercel temporarily
     remotePatterns: [
       { protocol: 'https', hostname: 'loremflickr.com' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
